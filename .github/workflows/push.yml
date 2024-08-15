@@ -1,0 +1,48 @@
+name: Push to Lokalise
+on:
+  workflow_dispatch:
+  push:  # If you want to trigger this on a push event as well
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      GITHUB_PREVIOUS_COMMIT: ${{ github.event.after }}
+      GITHUB_CURRENT_COMMIT: ${{ github.event.before }}
+      VAR_LOKALISE_API_TOKEN: ${{ secrets.LOKALISE_API_TOKEN }}
+      VAR_LOKALISE_PROJECT_ID: ${{ vars.LOKALISE_PROJECT_ID }}
+      VAR_LOKALISE_SOURCE_LANG_ISO: ${{ vars.LOKALISE_SOURCE_LANG }}
+      VAR_LOKALISE_FOLDER_PATH: ${{ vars.LOKALISE_TRANSLATIONS_PATH }}
+    steps:
+      # Checkout the repository to the GitHub runner
+      - name: Checkout Repo
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0  # Fetch the full history of the repository to ensure all commits are available
+
+      # Download and install the Lokalise CLI tool
+      - name: Install Lokalise CLI
+        run: curl -sfL https://raw.githubusercontent.com/lokalise/lokalise-cli-2-go/master/install.sh | sh
+
+      # Lokalise Branching
+      - name: List Lokalise Branches
+        id: lokalise_branches
+        run: |
+          BRANCHES=$(./bin/lokalise2 --token="${{ env.VAR_LOKALISE_API_TOKEN }}" \
+          --project-id="${{ env.VAR_LOKALISE_PROJECT_ID }}" \
+          branch list | jq -r '.branches[].name')
+          
+          echo "Lokalise branches: $BRANCHES"
+          echo "$BRANCHES" > lokalise_branches.txt
+          
+          # Save to environment file
+          echo "BRANCHES=$BRANCHES" >> $GITHUB_ENV
+        
+      - name: Compare Lokalise Branch names to Git Triggering Branch
+        run: |
+          BRANCH_NAME="${{ github.ref_name }}"
+          if echo "$BRANCHES" | grep -qw "$BRANCH_NAME"; then
+            echo "Branch $BRANCH_NAME exists in Lokalise."
+          else
+            echo "Branch $BRANCH_NAME does not exist in Lokalise."
+            exit 1
+          fi
