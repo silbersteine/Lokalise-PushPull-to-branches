@@ -44,6 +44,7 @@ jobs:
           echo GIT_BRANCH_NAME = "$GIT_BRANCH_NAME"
           echo  env.VAR_GIT_DEFAULT_BRANCH = ${{ env.VAR_GIT_DEFAULT_BRANCH }}
           echo VAR_GIT_DEFAULT_BRANCH ="$VAR_GIT_DEFAULT_BRANCH"
+          echo vars.VAR_GIT_DEFAULT_BRANCH = ${{ vars.VAR_GIT_DEFAULT_BRANCH }}
 
       # Compare Lokalise Branch names to Git Triggering Branch
       - name: Compare Lokalise Branch names to Git Triggering Branch
