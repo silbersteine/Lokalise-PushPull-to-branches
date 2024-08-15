@@ -41,7 +41,7 @@ jobs:
       - name: Compare Lokalise Branch names to Git Triggering Branch
         run: |
           BRANCH_NAME="${{ github.ref_name }}"
-           if [ "$BRANCH_NAME" = ${{ env.VAR_GIT_DEFAULT_BRANCH }} ]; then
+           if [ "$BRANCH_NAME" = "$VAR_GIT_DEFAULT_BRANCH"" ]; then
             echo "Your default branch in Lokalise is $DEFAULT_BRANCH and it exists."
            elif echo "$BRANCHES" | grep -qw "$BRANCH_NAME"; then
             echo "Branch $BRANCH_NAME exists in Lokalise."
