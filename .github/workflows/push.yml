@@ -11,7 +11,7 @@ jobs:
       VAR_LOKALISE_PROJECT_ID: ${{ vars.LOKALISE_PROJECT_ID }}
       VAR_LOKALISE_SOURCE_LANG_ISO: ${{ vars.LOKALISE_SOURCE_LANG }}
       VAR_LOKALISE_FOLDER_PATH: ${{ vars.LOKALISE_TRANSLATIONS_PATH }}
-      VAR_GIT_DEFAULT_BRANCH: ${{ env.VAR_GIT_DEFAULT_BRANCH }}
+      VAR_GIT_DEFAULT_BRANCH: ${{ vars.VAR_GIT_DEFAULT_BRANCH }}
 
     steps:
       # Checkout the repository to the GitHub runner
