@@ -1,7 +1,6 @@
 name: Push to Lokalise
 on:
   workflow_dispatch:
-  push:  # If you want to trigger this on a push event as well
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -12,6 +11,8 @@ jobs:
       VAR_LOKALISE_PROJECT_ID: ${{ vars.LOKALISE_PROJECT_ID }}
       VAR_LOKALISE_SOURCE_LANG_ISO: ${{ vars.LOKALISE_SOURCE_LANG }}
       VAR_LOKALISE_FOLDER_PATH: ${{ vars.LOKALISE_TRANSLATIONS_PATH }}
+      VAR_GIT_DEFAULT_BRANCH: ${{ env.VAR_GIT_DEFAULT_BRANCH }}
+
     steps:
       # Checkout the repository to the GitHub runner
       - name: Checkout Repo
@@ -40,9 +41,11 @@ jobs:
       - name: Compare Lokalise Branch names to Git Triggering Branch
         run: |
           BRANCH_NAME="${{ github.ref_name }}"
-          if echo "$BRANCHES" | grep -qw "$BRANCH_NAME"; then
+           if [ "$BRANCH_NAME" = "${{ env.VAR_GIT_DEFAULT_BRANCH }}" ]; then
+            echo "Your default branch in Lokalise is $DEFAULT_BRANCH and it exists."
+           elif echo "$BRANCHES" | grep -qw "$BRANCH_NAME"; then
             echo "Branch $BRANCH_NAME exists in Lokalise."
-          else
+           else
             echo "Branch $BRANCH_NAME does not exist in Lokalise."
             exit 1
-          fi
+           fi
