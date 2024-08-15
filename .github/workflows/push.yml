@@ -35,6 +35,13 @@ jobs:
           echo -e "Lokalise branches:\n$LOKALISE_BRANCHES"
           echo "$LOKALISE_BRANCHES" > lokalise_branches.txt
         
+      # Debug step to read the contents of lokalise_branches.txt
+      - name: Debug - Show Lokalise Branches
+        run: |
+          echo "Contents of lokalise_branches.txt:"
+          cat lokalise_branches.txt
+
+      # Compare Lokalise Branch names to Git Triggering Branch
       - name: Compare Lokalise Branch names to Git Triggering Branch
         run: |
           GIT_BRANCH_NAME="${{ github.ref_name }}"
@@ -48,4 +55,3 @@ jobs:
             echo "Branch $GIT_BRANCH_NAME does not exist in Lokalise."
             exit 1
           fi
-        
