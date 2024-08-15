@@ -68,4 +68,4 @@ jobs:
           ./bin/lokalise2 --token="${{ env.VAR_LOKALISE_API_TOKEN }}" \
           --project-id="${{ env.VAR_LOKALISE_PROJECT_ID }}" \
           branch create \
-          -- name ${{ github.ref_name }}
+          -- name "${{ github.ref_name }}"
