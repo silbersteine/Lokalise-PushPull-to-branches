@@ -58,5 +58,14 @@ jobs:
             echo "Branch $GIT_BRANCH_NAME exists in Lokalise."
           else
             echo "Branch $GIT_BRANCH_NAME does not exist in Lokalise."
-            exit 1
+            echo "branch_exists=false" >> $GITHUB_ENV
           fi
+
+      # Create a new branch in Lokalise if it doesn't exist
+      - name: Create Lokalise Branch
+        if: env.branch_exists == 'false'
+        run: |
+          ./bin/lokalise2 --token="${{ env.VAR_LOKALISE_API_TOKEN }}" \
+          --project-id="${{ env.VAR_LOKALISE_PROJECT_ID }}" \
+          branch create \
+          -- name ${{ github.ref_name }}
