@@ -32,11 +32,8 @@ jobs:
           --project-id="${{ env.VAR_LOKALISE_PROJECT_ID }}" \
           branch list | jq -r '.branches[].name')
           
-          echo "Lokalise branches: $BRANCHES"
+          echo -e "Lokalise branches:\n$BRANCHES"
           echo "$BRANCHES" > lokalise_branches.txt
-          
-          # Save to environment file
-          echo "BRANCHES=$BRANCHES" >> $GITHUB_ENV
         
       - name: Compare Lokalise Branch names to Git Triggering Branch
         run: |
