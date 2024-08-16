@@ -51,7 +51,6 @@ jobs:
           echo "Contents of changed_files.txt:"
           cat changed_files.txt
 
-
       # Lokalise Branching
       - name: List Lokalise Branches
         id: lokalise_branches
