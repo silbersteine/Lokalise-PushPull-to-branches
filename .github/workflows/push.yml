@@ -41,12 +41,6 @@ jobs:
           echo "Changed localization files between ${{ vars.GIT_UPSTREAM_BRANCH }} and ${{ github.ref_name }}:"
           git diff --name-only ${{ github.ref_name }}-upstream...${{ github.ref_name }}-current -- 'pub/locales/en/**' | tee -a changed_files.txt
 
-      
-          # List all new files in the current branch that do not exist in the upstream branch
-          echo "New localization files in ${{ github.ref_name }} branch:"
-          git diff --name-only --diff-filter=A ${{ github.ref_name }}-upstream...${{ github.ref_name }}-current -- 'pub/locales/en/**' | tee -a changed_files.txt
-
-
       # Debug read contents of changed_files.txt
       - name: Debug - changed_files.txt
         run: |
