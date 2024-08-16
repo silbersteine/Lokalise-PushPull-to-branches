@@ -138,7 +138,7 @@ jobs:
               echo "Uploading $file to Lokalise..."
               ./bin/lokalise2 --token="${{ env.VAR_LOKALISE_API_TOKEN }}" \
               --project-id="${{ env.VAR_LOKALISE_PROJECT_ID }}:feature4 " \
-              file upload \
+              files upload \
               --file="$file" \
               --lang-iso="${{ env.VAR_LOKALISE_SOURCE_LANG_ISO }}" \
               --replace-modified \
