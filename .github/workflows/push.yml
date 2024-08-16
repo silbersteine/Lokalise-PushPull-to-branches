@@ -73,7 +73,7 @@ jobs:
             
           if [ "$GIT_BRANCH_NAME" = "${{ env.VAR_GIT_DEFAULT_BRANCH }}" ]; then
             echo "Your default branch in Lokalise is Master and default GIT branch name is $VAR_GIT_DEFAULT_BRANCH. Master/main exists in Lokalise. Continuing on Lokalise Master"
-            LOKALISE_BRANCH="Master"
+            LOKALISE_BRANCH="master"
             echo "$LOKALISE_BRANCH" > lokalise_branch.txt
             echo "push_to_Lokalise_master"="true" >> $GITHUB_ENV
 
@@ -197,7 +197,7 @@ jobs:
             if [ -f "$file" ]; then
               echo "Uploading $file to Lokalise..."
               ./bin/lokalise2 --token="${{ env.VAR_LOKALISE_API_TOKEN }}" \
-              --project-id="${{ env.VAR_LOKALISE_PROJECT_ID }}:Master" \
+              --project-id="${{ env.VAR_LOKALISE_PROJECT_ID }}:$LOKALISE_BRANCH"
               file upload \
               --file="$file" \
               --lang-iso="${{ env.VAR_LOKALISE_SOURCE_LANG_ISO }}" \
