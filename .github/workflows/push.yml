@@ -197,7 +197,7 @@ jobs:
             if [ -f "$file" ]; then
               echo "Uploading $file to Lokalise..."
               ./bin/lokalise2 --token="${{ env.VAR_LOKALISE_API_TOKEN }}" \
-              --project-id="${{ env.VAR_LOKALISE_PROJECT_ID }}:$LOKALISE_BRANCH" \
+              --project-id="${{ env.VAR_LOKALISE_PROJECT_ID }}:Master" \
               file upload \
               --file="$file" \
               --lang-iso="${{ env.VAR_LOKALISE_SOURCE_LANG_ISO }}" \
