@@ -136,7 +136,7 @@ jobs:
           for file in $changed_files; do
             if [ -f "$file" ]; then
               echo "Uploading $file to Lokalise..."
-              ./bin/lokalise2 --token="${{ env.VAR_LOKALISE_API_TOKEN }}:${LOKALISE_BRANCH} " \
+              ./bin/lokalise2 --token="${{ env.VAR_LOKALISE_API_TOKEN }}:feature4 " \
               --project-id="${{ env.VAR_LOKALISE_PROJECT_ID }}" \
               file upload \
               --file="$file" \
