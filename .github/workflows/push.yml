@@ -75,11 +75,13 @@ jobs:
             echo "Your default branch in Lokalise is Master and default GIT branch name is $VAR_GIT_DEFAULT_BRANCH. Master/main exists in Lokalise. Continuing on Lokalise Master"
             echo LOKALISE_BRANCH="Master"
             echo "$GIT_BRANCH_NAME" > lokalise_branch.txt
+            echo "push_to_Lokalise_master"="true" >> $GITHUB_ENV
 
           elif echo "$LOKALISE_BRANCHES" | grep -qw "$GIT_BRANCH_NAME"; then
             echo "Branch $GIT_BRANCH_NAME exists in Lokalise. Continuing on Lokalise branch."
             echo LOKALISE_BRANCH="$GIT_BRANCH_NAME"
             echo "$GIT_BRANCH_NAME" > lokalise_branch.txt
+            
             
           else
             echo "Branch $GIT_BRANCH_NAME does not exist in Lokalise. Will create a branch in Lokalise."
@@ -120,6 +122,50 @@ jobs:
       # Push changed files to Lokalise Branch
       - name: Push files to Lokalise Branch
         run: |
+          if: env.push_to_Lokalise_master == 'false'
+          # Fetch the branch name from lokalise_branch.txt
+          LOKALISE_BRANCH=$(cat lokalise_branch.txt)
+          echo "Fetched branch name: $LOKALISE_BRANCH"
+          
+          # Read changed files from changed_files.txt
+          if [ -f changed_files.txt ]; then
+            changed_files=$(cat changed_files.txt | grep -E '^pub/locales/en/.*\.json$')
+          else
+            echo "No changed_files.txt file found. Exiting."
+            exit 1
+          fi
+            
+          echo "Changed files to push to Lokalise:"
+          echo "$changed_files"
+        
+          # Loop through each changed file and upload it to Lokalise
+          for file in $changed_files; do
+            if [ -f "$file" ]; then
+              echo "Uploading $file to Lokalise..."
+              ./bin/lokalise2 --token="${{ env.VAR_LOKALISE_API_TOKEN }}" \
+              --project-id="${{ env.VAR_LOKALISE_PROJECT_ID }}:$LOKALISE_BRANCH" \
+              file upload \
+              --file="$file" \
+              --lang-iso="${{ env.VAR_LOKALISE_SOURCE_LANG_ISO }}" \
+              --replace-modified \
+              --include-path \
+              --distinguish-by-file \
+              --poll \
+              --poll-timeout=120s \
+              --tag-inserted-keys \
+              --tag-skipped-keys=true \
+              --tag-updated-keys \
+              --tags ${{ github.ref_name }}
+            else
+              echo "File $file does not exist."
+            fi
+          done
+
+
+      # Push changed files to Lokalise Branch
+      - name: Push files to Lokalise Branch
+        run: |
+          if: env.push_to_Lokalise_master == 'true'
           # Fetch the branch name from lokalise_branch.txt
           LOKALISE_BRANCH=$(cat lokalise_branch.txt)
           echo "Fetched branch name: $LOKALISE_BRANCH"
