@@ -93,7 +93,7 @@ jobs:
           fi
 
       # Debug LOKALISE_BRANCH 
-      - name: Debug
+      - name: Debug LOKALISE_BRANCH
         run: |
           echo "Value of LOKALISE_BRANCH:"
           if [ -f lokalise_branch.txt ]; then
@@ -104,7 +104,7 @@ jobs:
           fi
 
       # Debug env.VAR push_to_Lokalise_master
-      - name: Debug
+      - name: Debug env.VAR push_to_Lokalise_master
         run: |
           echo "Value of push_to_Lokalise_master: ${{ env.push_to_Lokalise_master }}"
 
@@ -136,7 +136,7 @@ jobs:
         run: | 
           # Fetch the branch name from lokalise_branch.txt
           LOKALISE_BRANCH=$(cat lokalise_branch.txt)
-          echo "Fetched branch name: $LOKALISE_BRANCH"
+          echo "Seind files to Lokalise branch: $LOKALISE_BRANCH"
           
           # Read changed files from changed_files.txt
           if [ -f changed_files.txt ]; then
@@ -154,7 +154,7 @@ jobs:
             if [ -f "$file" ]; then
               echo "Uploading $file to Lokalise..."
               ./bin/lokalise2 --token="${{ env.VAR_LOKALISE_API_TOKEN }}" \
-              --project-id="${{ env.VAR_LOKALISE_PROJECT_ID }}:$LOKALISE_BRANCH" \
+              --project-id="${{ env.VAR_LOKALISE_PROJECT_ID }} \
               file upload \
               --file="$file" \
               --lang-iso="${{ env.VAR_LOKALISE_SOURCE_LANG_ISO }}" \
