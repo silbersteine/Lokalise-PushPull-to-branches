@@ -30,19 +30,21 @@ jobs:
       # Check for changed and new files in Git
       - name: Get all changed files between branches
         run: |
-          # Fetch the upstream branch
-          git fetch origin ${{ vars.GIT_UPSTREAM_BRANCH }}:${{ github.ref_name }}-upstream
-          
-          # Fetch the current branch
-          git fetch origin ${{ github.ref_name }}:${{ github.ref_name }}-current
-          
           # Initialize the changed_files.txt file
           > changed_files.txt
 
-          # List all changed files between the two branches
-          echo "Changed localization files between ${{ vars.GIT_UPSTREAM_BRANCH }} and ${{ github.ref_name }}:"
-          git diff --name-only ${{ github.ref_name }}-upstream...${{ github.ref_name }}-current -- '${{ vars.LOKALISE_TRANSLATIONS_PATH }}/${{ vars.LOKALISE_SOURCE_LANG }}/**' | tee -a changed_files.txt
-
+          # Check if the branch is the default branch 
+          if [ "${{ github.ref_name }}" = "${{ vars.GIT_DEFAULT_BRANCH }}" ]; then
+            echo "Changed localization files between HEAD~1 and HEAD:"
+            git diff --name-only HEAD~1 HEAD -- '${{ vars.LOKALISE_TRANSLATIONS_PATH }}/${{ vars.LOKALISE_SOURCE_LANG }}/**' | tee -a changed_files.txt
+          else
+          # Fetch the upstream branch
+            git fetch origin ${{ vars.GIT_UPSTREAM_BRANCH }}:${{ github.ref_name }}-upstream
+          # Fetch the current branch
+            git fetch origin ${{ github.ref_name }}:${{ github.ref_name }}-current
+            echo "Changed localization files between ${{ vars.GIT_UPSTREAM_BRANCH }} and ${{ github.ref_name }}:"
+            git diff --name-only ${{ github.ref_name }}-upstream...${{ github.ref_name }}-current -- '${{ vars.LOKALISE_TRANSLATIONS_PATH }}/${{ vars.LOKALISE_SOURCE_LANG }}/**' | tee -a changed_files.txt
+          fi
           
       # Debug read contents of changed_files.txt
       - name: Debug - changed_files.txt
@@ -72,7 +74,7 @@ jobs:
           if [ "$GIT_BRANCH_NAME" = "${{ env.VAR_GIT_DEFAULT_BRANCH }}" ]; then
             echo "Your default branch in Lokalise is Master and default GIT branch name is $VAR_GIT_DEFAULT_BRANCH. Master/main exists in Lokalise. Continuing on Lokalise Master"
             echo LOKALISE_BRANCH="${{ env.VAR_GIT_DEFAULT_BRANCH }}"
-            echo "${{ env.VAR_GIT_DEFAULT_BRANCH }}" > lokalise_branch.txt
+            echo "$GIT_BRANCH_NAME" > lokalise_branch.txt
 
           elif echo "$LOKALISE_BRANCHES" | grep -qw "$GIT_BRANCH_NAME"; then
             echo "Branch $GIT_BRANCH_NAME exists in Lokalise. Continuing on Lokalise branch."
