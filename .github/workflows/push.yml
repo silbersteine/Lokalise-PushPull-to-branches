@@ -28,7 +28,7 @@ jobs:
       - name: List Lokalise Branches
         id: lokalise_branches
         run: |
-          LOKALISE_BRANCHES=$(./bin/lokalise2 --token="${{ env.VAR_LOKALISE_API_TOKEN }}:" \
+          LOKALISE_BRANCHES=$(./bin/lokalise2 --token="${{ env.VAR_LOKALISE_API_TOKEN }}" \
           --project-id="${{ env.VAR_LOKALISE_PROJECT_ID }}" \
           branch list | jq -r '.branches[].name')
           
