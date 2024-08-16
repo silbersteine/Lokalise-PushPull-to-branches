@@ -81,6 +81,7 @@ jobs:
             echo "Branch $GIT_BRANCH_NAME exists in Lokalise. Continuing on Lokalise branch."
             echo LOKALISE_BRANCH="$GIT_BRANCH_NAME"
             echo "$GIT_BRANCH_NAME" > lokalise_branch.txt
+            echo "push_to_Lokalise_master"="false" >> $GITHUB_ENV
             
             
           else
@@ -88,14 +89,16 @@ jobs:
             echo LOKALISE_BRANCH="$GIT_BRANCH_NAME"
             echo "$GIT_BRANCH_NAME" > lokalise_branch.txt
             echo "branch_exists=false" >> $GITHUB_ENV
+            echo "push_to_Lokalise_master"="false" >> $GITHUB_ENV
           fi
 
 
       # Debug read contents of lokalise_branch.txt
-      - name: Debug - Show Lokalise Branch
+      - name: Debug
         run: |
           echo "Contents of lokalise_branch.txt:"
           cat lokalise_branch.txt
+          echo "Value of push_to_Lokalise_master: ${{ env.push_to_Lokalise_master }}"
 
       # Create a new branch in Lokalise if it doesn't exist
       - name: Create Lokalise Branch
@@ -162,8 +165,8 @@ jobs:
           done
 
 
-      # Push changed files to Lokalise Branch
-      - name: Push files to Lokalise Branch
+      # Push changed files to Lokalise Master
+      - name: Push files to Lokalise Master
         run: |
           if: env.push_to_Lokalise_master == 'true'
           # Fetch the branch name from lokalise_branch.txt
