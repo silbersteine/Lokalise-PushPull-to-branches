@@ -12,6 +12,7 @@ jobs:
       VAR_LOKALISE_SOURCE_LANG_ISO: ${{ vars.LOKALISE_SOURCE_LANG }}
       VAR_LOKALISE_FOLDER_PATH: ${{ vars.LOKALISE_TRANSLATIONS_PATH }}
       VAR_GIT_DEFAULT_BRANCH: ${{ vars.GIT_DEFAULT_BRANCH }}
+      VAR_GIT_UPSTREAM_BRANCH: ${{ vars.GIT_UPSTREAM_BRANCH }}
 
     steps:
       # Checkout the repository to the GitHub runner
@@ -23,6 +24,33 @@ jobs:
       # Download and install the Lokalise CLI tool
       - name: Install Lokalise CLI
         run: curl -sfL https://raw.githubusercontent.com/lokalise/lokalise-cli-2-go/master/install.sh | sh
+
+      # Check for changed and new files in Git
+      - name: Get all changed files between branches
+        run: |
+          # Fetch the upstream branch
+          git fetch origin ${{ vars.GIT_UPSTREAM_BRANCH }}:${{ github.ref_name }}-upstream
+          
+          # Fetch the current branch
+          git fetch origin ${{ github.ref_name }}:${{ github.ref_name }}-current
+          
+          # Initialize the changed_files.txt file
+          > changed_files.txt
+
+          # List all changed files between the two branches
+          echo "Changed files between ${{ vars.GIT_UPSTREAM_BRANCH }} and ${{ github.ref_name }}:"
+          git diff --name-only ${{ github.ref_name }}-upstream...${{ github.ref_name }}-current -- 'pub/locales/en/**' >> changed_files.txt
+      
+          # List all new files in the current branch that do not exist in the upstream branch
+          echo "New files in ${{ github.ref_name }} branch:"
+          git diff --name-only --diff-filter=A ${{ github.ref_name }}-upstream...${{ github.ref_name }}-current -- 'pub/locales/en/**' >> changed_files.txt
+
+      # Debug read contents of changed_files.txt
+      - name: Debug - changed_files.txt
+        run: |
+          echo "Contents of changed_files.txt:"
+          cat changed_files.txt
+
 
       # Lokalise Branching
       - name: List Lokalise Branches
@@ -96,3 +124,12 @@ jobs:
           else
             echo "Branch created successfully in Lokalise. HTTP Status: $HTTP_STATUS"
           fi
+
+      # Fetch the list of all changed files between github.ref_name and origin
+      - name: Get all changed files
+        run: |
+            git fetch origin main:${{ github.ref_name }}-main  # Fetch the main branch
+            git fetch origin ${{ github.ref_name }}:${{ github.ref_name }}-current  # Fetch the current branch
+            git diff --name-only ${{ github.ref_name }}-main...${{ github.ref_name }}-current  # List all changed files
+
+
