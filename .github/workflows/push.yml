@@ -119,12 +119,3 @@ jobs:
           else
             echo "Branch created successfully in Lokalise. HTTP Status: $HTTP_STATUS"
           fi
-
-      # Fetch the list of all changed files between github.ref_name and origin
-      - name: Get all changed files
-        run: |
-            git fetch origin main:${{ github.ref_name }}-main  # Fetch the main branch
-            git fetch origin ${{ github.ref_name }}:${{ github.ref_name }}-current  # Fetch the current branch
-            git diff --name-only ${{ github.ref_name }}-main...${{ github.ref_name }}-current  # List all changed files
-
-
