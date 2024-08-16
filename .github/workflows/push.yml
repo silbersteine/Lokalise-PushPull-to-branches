@@ -28,7 +28,7 @@ jobs:
       - name: List Lokalise Branches
         id: lokalise_branches
         run: |
-          LOKALISE_BRANCHES=$(./bin/lokalise2 --token="${{ env.VAR_LOKALISE_API_TOKEN }}" \
+          LOKALISE_BRANCHES=$(./bin/lokalise2 --token="${{ env.VAR_LOKALISE_API_TOKEN }}:" \
           --project-id="${{ env.VAR_LOKALISE_PROJECT_ID }}" \
           branch list | jq -r '.branches[].name')
           
@@ -42,7 +42,7 @@ jobs:
           echo "Contents of lokalise_branches.txt:"
           cat lokalise_branches.txt
           echo GIT_BRANCH_NAME = "$GIT_BRANCH_NAME"
-          echo  env.VAR_GIT_DEFAULT_BRANCH = ${{ env.VAR_GIT_DEFAULT_BRANCH }}
+          echo env.VAR_GIT_DEFAULT_BRANCH = ${{ env.VAR_GIT_DEFAULT_BRANCH }}
           echo VAR_GIT_DEFAULT_BRANCH ="$VAR_GIT_DEFAULT_BRANCH"
           echo vars.VAR_GIT_DEFAULT_BRANCH = ${{ vars.GIT_DEFAULT_BRANCH }}
 
@@ -53,19 +53,46 @@ jobs:
           LOKALISE_BRANCHES=$(cat lokalise_branches.txt)  # Read the contents of the file into the LOKALISE_BRANCHES variable
             
           if [ "$GIT_BRANCH_NAME" = "${{ env.VAR_GIT_DEFAULT_BRANCH }}" ]; then
-            echo "Your default branch in Lokalise is Master and default GIT branch name is $VAR_GIT_DEFAULT_BRANCH. Master/main exists in Lokalise"
+            echo "Your default branch in Lokalise is Master and default GIT branch name is $VAR_GIT_DEFAULT_BRANCH. Master/main exists in Lokalise. Continuing on Lokalise Master"
+            echo LOKALISE_BRANCH="${{ env.VAR_GIT_DEFAULT_BRANCH }}"
+            echo "${{ env.VAR_GIT_DEFAULT_BRANCH }}" > lokalise_branch.txt
+
           elif echo "$LOKALISE_BRANCHES" | grep -qw "$GIT_BRANCH_NAME"; then
-            echo "Branch $GIT_BRANCH_NAME exists in Lokalise."
+            echo "Branch $GIT_BRANCH_NAME exists in Lokalise. Continuing on Lokalise branch."
+            echo LOKALISE_BRANCH="$GIT_BRANCH_NAME"
+            echo "$GIT_BRANCH_NAME" > lokalise_branch.txt
+            
           else
-            echo "Branch $GIT_BRANCH_NAME does not exist in Lokalise."
+            echo "Branch $GIT_BRANCH_NAME does not exist in Lokalise. Will create a branch in Lokalise."
+            echo LOKALISE_BRANCH="$GIT_BRANCH_NAME"
+            echo "$GIT_BRANCH_NAME" > lokalise_branch.txt
             echo "branch_exists=false" >> $GITHUB_ENV
           fi
+
+      # Debug read contents of lokalise_branch.txt
+      - name: Debug - Show Lokalise Branch
+        run: |
+          echo "Contents of lokalise_branch.txt:"
+          cat lokalise_branch.txt
 
       # Create a new branch in Lokalise if it doesn't exist
       - name: Create Lokalise Branch
         if: env.branch_exists == 'false'
         run: |
+          # Fetch the branch name from lokalise_branch.txt
+          LOKALISE_BRANCH=$(cat lokalise_branch.txt)
+
+          # Create a new branch in Lokalise using the fetched branch name and capture the HTTP response
           ./bin/lokalise2 --token="${{ env.VAR_LOKALISE_API_TOKEN }}" \
           --project-id="${{ env.VAR_LOKALISE_PROJECT_ID }}" \
           branch create \
-          --name "${{ github.ref_name }}"
+          --name "$LOKALISE_BRANCH"
+
+          # Check if the API response contains a 200 status
+          HTTP_STATUS=$(echo "$RESPONSE" | jq -r '.status_code')
+          if [ "$HTTP_STATUS" -ne 200 ]; then
+            echo "Error: Failed to create branch in Lokalise. HTTP Status: $HTTP_STATUS"
+            exit 1
+          else
+            echo "Branch created successfully in Lokalise. HTTP Status: $HTTP_STATUS"
+          fi
