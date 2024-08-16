@@ -41,7 +41,7 @@ jobs:
 
           # List all changed files between the two branches
           echo "Changed localization files between ${{ vars.GIT_UPSTREAM_BRANCH }} and ${{ github.ref_name }}:"
-          git diff --name-only ${{ github.ref_name }}-upstream...${{ github.ref_name }}-current -- 'pub/locales/en/**' | tee -a changed_files.txt
+          git diff --name-only ${{ github.ref_name }}-upstream...${{ github.ref_name }}-current -- '${{ vars.LOKALISE_TRANSLATIONS_PATH }}/${{ vars.LOKALISE_SOURCE_LANG }}/**' | tee -a changed_files.txt
 
           
       # Debug read contents of changed_files.txt
