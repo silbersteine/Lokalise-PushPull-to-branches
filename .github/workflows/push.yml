@@ -124,8 +124,8 @@ jobs:
 
       # Push changed files to Lokalise Branch
       - name: Push files to Lokalise Branch
-        run: |
-          if: env.push_to_Lokalise_master == 'false'
+        if: env.push_to_Lokalise_master == 'false'
+        run: | 
           # Fetch the branch name from lokalise_branch.txt
           LOKALISE_BRANCH=$(cat lokalise_branch.txt)
           echo "Fetched branch name: $LOKALISE_BRANCH"
@@ -167,8 +167,8 @@ jobs:
 
       # Push changed files to Lokalise Master
       - name: Push files to Lokalise Master
+        if: env.push_to_Lokalise_master == 'true'
         run: |
-          if: env.push_to_Lokalise_master == 'true'
           # Fetch the branch name from lokalise_branch.txt
           LOKALISE_BRANCH=$(cat lokalise_branch.txt)
           echo "Fetched branch name: $LOKALISE_BRANCH"
