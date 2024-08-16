@@ -74,7 +74,7 @@ jobs:
           if [ "$GIT_BRANCH_NAME" = "${{ env.VAR_GIT_DEFAULT_BRANCH }}" ]; then
             echo "Your default branch in Lokalise is Master and default GIT branch name is $VAR_GIT_DEFAULT_BRANCH. Master/main exists in Lokalise. Continuing on Lokalise Master"
             echo LOKALISE_BRANCH="Master"
-            echo "LOKALISE_BRANCH" > lokalise_branch.txt
+            echo "$LOKALISE_BRANCH" > lokalise_branch.txt
             echo "push_to_Lokalise_master"="true" >> $GITHUB_ENV
 
           elif echo "$LOKALISE_BRANCHES" | grep -qw "$GIT_BRANCH_NAME"; then
@@ -92,12 +92,16 @@ jobs:
             echo "push_to_Lokalise_master"="false" >> $GITHUB_ENV
           fi
 
-
-      # Debug read contents of lokalise_branch.txt
+      # Debug LOKALISE_BRANCH
       - name: Debug
         run: |
-          echo "Contents of lokalise_branch.txt:"
-          cat lokalise_branch.txt
+          echo "Value of LOKALISE_BRANCH:"
+          LOKALISE_BRANCH=$(cat lokalise_branch.txt)
+          echo "$LOKALISE_BRANCH"
+
+      # Debug env.VAR push_to_Lokalise_master
+      - name: Debug
+        run: |
           echo "Value of push_to_Lokalise_master: ${{ env.push_to_Lokalise_master }}"
 
       # Create a new branch in Lokalise if it doesn't exist
