@@ -73,7 +73,7 @@ jobs:
             
           if [ "$GIT_BRANCH_NAME" = "${{ env.VAR_GIT_DEFAULT_BRANCH }}" ]; then
             echo "Your default branch in Lokalise is Master and default GIT branch name is $VAR_GIT_DEFAULT_BRANCH. Master/main exists in Lokalise. Continuing on Lokalise Master"
-            echo LOKALISE_BRANCH="${{ env.VAR_GIT_DEFAULT_BRANCH }}"
+            echo LOKALISE_BRANCH="Master"
             echo "$GIT_BRANCH_NAME" > lokalise_branch.txt
 
           elif echo "$LOKALISE_BRANCHES" | grep -qw "$GIT_BRANCH_NAME"; then
