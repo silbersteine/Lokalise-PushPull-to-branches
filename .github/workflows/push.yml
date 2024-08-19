@@ -31,7 +31,7 @@ jobs:
       # Check if Triggering Branch is Default Branch
       - name: Check if Triggering Branch is Git Default Branch
         run: |
-          GIT_BRANCH=$(cat branch.txt)
+          GIT_BRANCH=$(cat git_branch.txt)
           if [ "$GIT_BRANCH" = "${{ env.VAR_GIT_DEFAULT_BRANCH }}" ]; then
             echo "The Git default branch triggered this workflow."
             LOKALISE_BRANCH="$GIT_BRANCH"
