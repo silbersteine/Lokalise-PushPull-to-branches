@@ -114,7 +114,7 @@ jobs:
         run: |
           SHORT_SHA=${GITHUB_SHA::6}
           GIT_BRANCH_NAME=$(cat branch.txt)
-          GIT_LOCALIZATION_BRANCH_NAME="${{ env.VAR_GIT_LOCALIZATION_BRANCH_MARKER }}_${GIT_BRANCH_NAME}_${SHORT_SHA}" > git_localization_branch.txt
+          echo GIT_LOCALIZATION_BRANCH_NAME="${{ env.VAR_GIT_LOCALIZATION_BRANCH_MARKER }}_${GIT_BRANCH_NAME}_${SHORT_SHA}" > git_localization_branch.txt
 
           # Check if the branch already exists
           if git show-ref --quiet refs/heads/"$GIT_LOCALIZATION_BRANCH_NAME"; then
