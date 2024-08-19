@@ -50,6 +50,21 @@ jobs:
         run: |
           echo "IS_DEFAULT_BRANCH=$IS_DEFAULT_BRANCH"
 
+      # Assign Lokalise Branch of master for workflow use
+      - name: Assign Lokalise Branch of master for workflow use
+        if: ${{ env.IS_DEFAULT_BRANCH == 'true' }}  # Only run if IS_DEFAULT_BRANCH is true
+        run: |
+            echo "Branch $GIT_BRANCH_NAME is the default branch."
+            echo "LOKALISE_BRANCH=master" > lokalise_branch.txt
+      
+      # Debug read contents of lokalise_branch.txt
+      - name: Debug - lokalise_branch.txt
+        if: success()  # Only run this if the previous step did not fail
+        run: |
+          echo "Contents of lokalise_branch.txt:"
+          cat lokalise_branch.txt
+
+
       # List Lokalise Branches and save localization branch name
       - name: List Lokalise Branches and save localization branch name
         id: lokalise_branches
@@ -66,30 +81,6 @@ jobs:
         run: |
           echo "Contents of lokalise_branches.txt:"
           cat lokalise_branches.txt
-
-      # Assign Lokalise Branch of master for workflow use
-      - name: Compare Lokalise Branch names to Git Triggering Branch
-        if: ${{ env.IS_DEFAULT_BRANCH == 'true' }}  # Only run if IS_DEFAULT_BRANCH is true
-        run: |
-          GIT_BRANCH_NAME=$(cat branch.txt)
-          LOKALISE_BRANCHES=$(cat lokalise_branches.txt)
-
-          if echo "$LOKALISE_BRANCHES" | grep -q "^$GIT_BRANCH_NAME$"; then
-            echo "Branch $GIT_BRANCH_NAME exists in Lokalise."
-            echo "LOKALISE_BRANCH=$GIT_BRANCH_NAME" > lokalise_branch.txt
-          else
-            echo "Branch $GIT_BRANCH_NAME does not exist in Lokalise."
-            echo "Cancelling the workflow."
-            exit 1  # This will stop the workflow with an error
-          fi
-
-      # Debug read contents of lokalise_branch.txt
-      - name: Debug - lokalise_branch.txt
-        if: success()  # Only run this if the previous step did not fail
-        run: |
-          echo "Contents of lokalise_branch.txt:"
-          cat lokalise_branch.txt
-
 
       # Compare Lokalise Branch names to Git Triggering Branch, store branch name and Cancel Workflow if Branch Does Not Exist
       - name: Compare Lokalise Branch names to Git Triggering Branch
