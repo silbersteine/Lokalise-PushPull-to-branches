@@ -140,9 +140,15 @@ jobs:
                          --include-tags=${{ github.ref_name }}
 
       # Commit changes with debugging
-      - name: Commit  to localization branch
+      - name: Commit to localization branch
         run: |
+          # Debug: Check contents of git_localization_branch.txt
+          echo "Debug: Contents of git_localization_branch.txt:"
+          cat git_localization_branch.txt || { echo "Error: git_localization_branch.txt not found"; exit 1; }
+
           GIT_LOCALIZATION_BRANCH_NAME=$(cat git_localization_branch.txt)
+          echo "GIT_LOCALIZATION_BRANCH_NAME: $GIT_LOCALIZATION_BRANCH_NAME"
+
           echo "Git status before adding files:"
           git status
 
@@ -168,7 +174,7 @@ jobs:
             git push origin "$GIT_LOCALIZATION_BRANCH_NAME"
           fi
 
-      #Open pull request on triggering Git branch
+      # Open pull request on triggering Git branch
       - name: Create Pull Request
         run: |
             GIT_BRANCH_NAME=$(cat branch.txt)
