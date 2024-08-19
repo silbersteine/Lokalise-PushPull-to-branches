@@ -20,7 +20,29 @@ jobs:
         uses: actions/checkout@v3
         with:
           fetch-depth: 0  # Fetch the full history of the repository to ensure all commits are available
+      
+      # Store Git Branch Name 
+      - name: Get Git Branch Name
+        run: |
+          GIT_BRANCH="${{ github.ref_name }}"
+          echo "$GIT_BRANCH" > git_branch.txt
+          echo "The Git branch triggering this download is $GIT_BRANCH"
 
+      # Check if Triggering Branch is Default Branch
+      - name: Check if Triggering Branch is Git Default Branch
+        run: |
+          GIT_BRANCH=$(cat branch.txt)
+          if [ "$GIT_BRANCH" = "${{ env.VAR_GIT_DEFAULT_BRANCH }}" ]; then
+            echo "The Git default branch triggered this workflow."
+            LOKALISE_BRANCH="$GIT_BRANCH"
+            echo "$LOKALISE_BRANCH" > lokalise_branch.txt
+            echo "IS_DEFAULT_BRANCH=true" >> $GITHUB_ENV
+          else
+            echo "A Git feature branch triggered this workflow."
+            echo "IS_DEFAULT_BRANCH=false" >> $GITHUB_ENV
+            LOKALISE_BRANCH="$GIT_BRANCH"
+            echo "$LOKALISE_BRANCH" > lokalise_branch.txt
+          fi
 
       # Download and install the Lokalise CLI tool
       - name: Install Lokalise CLI
@@ -29,15 +51,10 @@ jobs:
 
       # Check for changed and new files in Git
       - name: Get all changed files between branches
+        if: ${{ env.IS_DEFAULT_BRANCH == 'false' }}  # Only run if IS_DEFAULT_BRANCH is false  
         run: |
           # Initialize the changed_files.txt file
           > changed_files.txt
-
-          # Check if the branch is the default branch 
-          if [ "${{ github.ref_name }}" = "${{ vars.GIT_DEFAULT_BRANCH }}" ]; then
-            echo "Changed localization files between HEAD~1 and HEAD:"
-            git diff --name-only HEAD~1 HEAD -- '${{ vars.LOKALISE_TRANSLATIONS_PATH }}/${{ vars.LOKALISE_SOURCE_LANG }}/**' | tee -a changed_files.txt
-          else
           # Fetch the upstream branch
             git fetch origin ${{ vars.GIT_UPSTREAM_BRANCH }}:${{ github.ref_name }}-upstream
           # Fetch the current branch
@@ -48,6 +65,7 @@ jobs:
           
       # Debug read contents of changed_files.txt
       - name: Debug - changed_files.txt
+        if: ${{ env.IS_DEFAULT_BRANCH == 'false' }}  # Only run if IS_DEFAULT_BRANCH is false 
         run: |
           echo "Contents of changed_files.txt:"
           cat changed_files.txt
@@ -56,6 +74,7 @@ jobs:
       # Lokalise Branching
       - name: List Lokalise Branches
         id: lokalise_branches
+        if: ${{ env.IS_DEFAULT_BRANCH == 'false' }}  # Only run if IS_DEFAULT_BRANCH is false 
         run: |
           LOKALISE_BRANCHES=$(./bin/lokalise2 --token="${{ env.VAR_LOKALISE_API_TOKEN }}" \
           --project-id="${{ env.VAR_LOKALISE_PROJECT_ID }}" \
@@ -67,33 +86,24 @@ jobs:
 
       # Compare Lokalise Branch names to Git Triggering Branch
       - name: Compare Lokalise Branch names to Git Triggering Branch
+        if: ${{ env.IS_DEFAULT_BRANCH == 'false' }}  # Only run if IS_DEFAULT_BRANCH is false 
         run: |
           GIT_BRANCH_NAME="${{ github.ref_name }}"
           LOKALISE_BRANCHES=$(cat lokalise_branches.txt)  # Read the contents of the file into the LOKALISE_BRANCHES variable
-            
-          if [ "$GIT_BRANCH_NAME" = "${{ env.VAR_GIT_DEFAULT_BRANCH }}" ]; then
-            echo "Your default branch in Lokalise is Master and default GIT branch name is $VAR_GIT_DEFAULT_BRANCH. Master/main exists in Lokalise. Continuing on Lokalise Master"
-            LOKALISE_BRANCH="master"
-            echo "$LOKALISE_BRANCH" > lokalise_branch.txt
-            echo "push_to_Lokalise_master"="true" >> $GITHUB_ENV
 
-          elif echo "$LOKALISE_BRANCHES" | grep -qw "$GIT_BRANCH_NAME"; then
+          if echo "$LOKALISE_BRANCHES" | grep -qw "$GIT_BRANCH_NAME"; then
             echo "Branch $GIT_BRANCH_NAME exists in Lokalise. Continuing on Lokalise branch."
             LOKALISE_BRANCH="$GIT_BRANCH_NAME"
             echo "$LOKALISE_BRANCH" > lokalise_branch.txt
-            echo "push_to_Lokalise_master"="false" >> $GITHUB_ENV
-            
-            
           else
             echo "Branch $GIT_BRANCH_NAME does not exist in Lokalise. Will create a branch in Lokalise."
             LOKALISE_BRANCH="$GIT_BRANCH_NAME"
             echo "$LOKALISE_BRANCH" > lokalise_branch.txt
-            echo "branch_exists=false" >> $GITHUB_ENV
-            echo "push_to_Lokalise_master"="false" >> $GITHUB_ENV
           fi
 
       # Debug LOKALISE_BRANCH 
       - name: Debug LOKALISE_BRANCH
+        if: ${{ env.IS_DEFAULT_BRANCH == 'false' }}  # Only run if IS_DEFAULT_BRANCH is false 
         run: |
           echo "Value of LOKALISE_BRANCH:"
           if [ -f lokalise_branch.txt ]; then
@@ -110,7 +120,7 @@ jobs:
 
       # Create a new branch in Lokalise if it doesn't exist
       - name: Create Lokalise Branch
-        if: env.branch_exists == 'false'
+        if: ${{ env.IS_DEFAULT_BRANCH == 'false' }}  # Only run if IS_DEFAULT_BRANCH is false  
         run: |
           # Fetch the branch name from lokalise_branch.txt
           LOKALISE_BRANCH=$(cat lokalise_branch.txt)
@@ -132,7 +142,7 @@ jobs:
 
       # Push changed files to Lokalise Branch
       - name: Push files to Lokalise Branch
-        if: env.push_to_Lokalise_master == 'false'
+        if: ${{ env.IS_DEFAULT_BRANCH == 'false' }}  # Only run if IS_DEFAULT_BRANCH is false  
         run: | 
           # Fetch the branch name from lokalise_branch.txt
           LOKALISE_BRANCH=$(cat lokalise_branch.txt)
@@ -175,7 +185,7 @@ jobs:
 
       # Push changed files to Lokalise Master
       - name: Push files to Lokalise Master
-        if: env.push_to_Lokalise_master == 'true'
+        if: ${{ env.IS_DEFAULT_BRANCH == 'true' }}  # Only run if IS_DEFAULT_BRANCH is true  
         run: |
           # Fetch the branch name from lokalise_branch.txt
           LOKALISE_BRANCH=$(cat lokalise_branch.txt)
