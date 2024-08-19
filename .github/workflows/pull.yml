@@ -114,15 +114,15 @@ jobs:
         run: |
           SHORT_SHA=${GITHUB_SHA::6}
           GIT_BRANCH_NAME=$(cat branch.txt)
-          NEW_BRANCH_NAME="${{ env.VAR_GIT_LOCALIZATION_BRANCH_MARKER }}_${GIT_BRANCH_NAME}_${SHORT_SHA}"
+          GIT_LOCALIZATION_BRANCH_NAME="${{ env.VAR_GIT_LOCALIZATION_BRANCH_MARKER }}_${GIT_BRANCH_NAME}_${SHORT_SHA}" > git_localization_branch.txt
 
           # Check if the branch already exists
-          if git show-ref --quiet refs/heads/"$NEW_BRANCH_NAME"; then
-            echo "Branch $NEW_BRANCH_NAME already exists. Checking out the branch."
-            git checkout "$NEW_BRANCH_NAME"
+          if git show-ref --quiet refs/heads/"$GIT_LOCALIZATION_BRANCH_NAME"; then
+            echo "Branch $LOCALIZATION_NAME already exists. Checking out the branch."
+            git checkout "$GIT_LOCALIZATION_BRANCH_NAME"
           else
-            echo "Branch $NEW_BRANCH_NAME does not exist. Creating and checking out the branch."
-            git checkout -b "$NEW_BRANCH_NAME"
+            echo "Branch $GIT_LOCALIZATION_BRANCH_NAME does not exist. Creating and checking out the branch."
+            git checkout -b "$GIT_LOCALIZATION_BRANCH_NAME"
           fi
 
        # Pull localization files from Lokalise
@@ -139,5 +139,59 @@ jobs:
                          --filter-data translated \
                          --include-tags=${{ github.ref_name }}
 
+      # Commit changes with debugging
+      - name: Commit  to localization branch
+        run: |
+          GIT_LOCALIZATION_BRANCH_NAME=$(cat git_localization_branch.txt)
+          echo "Git status before adding files:"
+          git status
+
+          git config --global user.name "${GITHUB_ACTOR}"
+          git config --global user.email "${GITHUB_ACTOR}@users.noreply.github.com"
+
+          echo "Adding files to staging area:"
+          git add ./${{ vars.LOKALISE_TRANSLATION_PATH }}/**/*.json -- ':!${{ vars.LOKALISE_TRANSLATION_PATH }}/${{ env.VAR_LOKALISE_SOURCE_LANG_ISO }}/*.json'
+
+          echo "Git status after adding files:"
+          git status
+
+          if [[ -z $(git status --untracked-files=no --porcelain) ]]; then
+            echo "No changes to commit"
+          else
+            echo "Committing changes"
+            git commit -m 'Translations update'
+            
+            echo "Git log after commit:"
+            git log -1
+
+            echo "Pushing changes to remote repository"
+            git push origin "$GIT_LOCALIZATION_BRANCH_NAME"
+          fi
+
+      #Open pull request on triggering Git branch
+      - name: Create Pull Request
+        run: |
+            GIT_BRANCH_NAME=$(cat branch.txt)
+            GIT_LOCALIZATION_BRANCH_NAME=$(cat git_localization_branch.txt)
+            echo "Git status before creating PR:"
+            git status
+
+            # Print details of uncommitted changes
+            echo "Uncommitted changes:"
+            git diff --name-only  # Show modified files not yet staged
+            git diff --cached --name-only  # Show staged files
+
+            # Ensure git configuration is correct
+            git config --global user.name "${GITHUB_ACTOR}"
+            git config --global user.email "${GITHUB_ACTOR}@users.noreply.github.com"
+
+            # Create the pull request
+            echo "Creating Pull Request..."
+            gh pr create --base "$GIT_BRANCH_NAME" \
+                        --head "$GIT_LOCALIZATION_BRANCH_NAME" \
+                        --title "Lokalise translations update" \
+                        --body ""
+
+            echo "Pull Request created successfully."
 
           
