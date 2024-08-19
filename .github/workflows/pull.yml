@@ -95,7 +95,7 @@ jobs:
 
           if echo "$LOKALISE_BRANCHES" | grep -q "^$GIT_BRANCH_NAME$"; then
             echo "Branch $GIT_BRANCH_NAME exists in Lokalise."
-            echo "GIT_BRANCH_NAME" > lokalise_branch.txt
+            echo "$GIT_BRANCH_NAME" > lokalise_branch.txt
           else
             echo "Branch $GIT_BRANCH_NAME does not exist in Lokalise."
             echo "Cancelling the workflow."
