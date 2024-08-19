@@ -118,12 +118,18 @@ jobs:
 
           # Check if the branch already exists
           if git show-ref --quiet refs/heads/"$GIT_LOCALIZATION_BRANCH_NAME"; then
-            echo "Branch $LOCALIZATION_NAME already exists. Checking out the branch."
+            echo "Git Branch $GIT_LOCALIZATION_BRANCH_NAME already exists. Checking out the branch."
             git checkout "$GIT_LOCALIZATION_BRANCH_NAME"
           else
             echo "Branch $GIT_LOCALIZATION_BRANCH_NAME does not exist. Creating and checking out the branch."
             git checkout -b "$GIT_LOCALIZATION_BRANCH_NAME"
           fi
+
+      # Debug - read contents of git_localization_branch.txt
+      - name: Debug - git_localization_branch.txt
+        run: |
+          echo "Contents of git_localization_branch.txt"
+          cat git_localization_branch.txt
 
        # Pull localization files from Lokalise
       - name: Pull localization files from Lokalise
@@ -142,12 +148,11 @@ jobs:
       # Commit changes with debugging
       - name: Commit to localization branch
         run: |
+          GIT_LOCALIZATION_BRANCH_NAME=$(cat git_localization_branch.txt)
           # Debug: Check contents of git_localization_branch.txt
           echo "Debug: Contents of git_localization_branch.txt:"
-          cat git_localization_branch.txt || { echo "Error: git_localization_branch.txt not found"; exit 1; }
-
-          GIT_LOCALIZATION_BRANCH_NAME=$(cat git_localization_branch.txt)
           echo "GIT_LOCALIZATION_BRANCH_NAME: $GIT_LOCALIZATION_BRANCH_NAME"
+          cat git_localization_branch.txt || { echo "Error: git_localization_branch.txt not found"; exit 1; }
 
           echo "Git status before adding files:"
           git status
