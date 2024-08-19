@@ -57,7 +57,7 @@ jobs:
         if: ${{ env.IS_DEFAULT_BRANCH == 'true' }}  # Only run if IS_DEFAULT_BRANCH is true
         run: |
             echo "Branch $GIT_BRANCH_NAME is the default branch."
-            echo "LOKALISE_BRANCH=master" > lokalise_branch.txt
+            echo "master" > lokalise_branch.txt
       
       # Debug read contents of lokalise_branch.txt
       - name: Debug - lokalise_branch.txt
@@ -95,7 +95,7 @@ jobs:
 
           if echo "$LOKALISE_BRANCHES" | grep -q "^$GIT_BRANCH_NAME$"; then
             echo "Branch $GIT_BRANCH_NAME exists in Lokalise."
-            echo "LOKALISE_BRANCH=$GIT_BRANCH_NAME" > lokalise_branch.txt
+            echo "GIT_BRANCH_NAME" > lokalise_branch.txt
           else
             echo "Branch $GIT_BRANCH_NAME does not exist in Lokalise."
             echo "Cancelling the workflow."
