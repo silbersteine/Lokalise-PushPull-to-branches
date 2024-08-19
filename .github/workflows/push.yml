@@ -34,7 +34,7 @@ jobs:
           GIT_BRANCH=$(cat git_branch.txt)
           if [ "$GIT_BRANCH" = "${{ env.VAR_GIT_DEFAULT_BRANCH }}" ]; then
             echo "The Git default branch triggered this workflow."
-            LOKALISE_BRANCH="$GIT_BRANCH"
+            LOKALISE_BRANCH="master"
             echo "$LOKALISE_BRANCH" > lokalise_branch.txt
             echo "IS_DEFAULT_BRANCH=true" >> $GITHUB_ENV
           else
