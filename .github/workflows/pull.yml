@@ -13,6 +13,7 @@ jobs:
       VAR_LOKALISE_FOLDER_PATH: ${{ vars.LOKALISE_TRANSLATIONS_PATH }}
       VAR_GIT_DEFAULT_BRANCH: ${{ vars.GIT_DEFAULT_BRANCH }}
       VAR_GIT_UPSTREAM_BRANCH: ${{ vars.GIT_UPSTREAM_BRANCH }}
+      VAR_GIT_LOCALIZATION_BRANCH_MARKER: ${{ vars.GIT_LOCALIZATION_BRANCH_MARKER }}
 
     steps:
       # Checkout the repository to the GitHub runner
@@ -47,6 +48,7 @@ jobs:
 
       # Debug read IS_DEFAULT_BRANCH value
       - name: Debug - IS_DEFAULT_BRANCH
+        if: ${{ env.IS_DEFAULT_BRANCH == 'true' }}  # Only run if IS_DEFAULT_BRANCH is true
         run: |
           echo "IS_DEFAULT_BRANCH=$IS_DEFAULT_BRANCH"
 
@@ -59,7 +61,7 @@ jobs:
       
       # Debug read contents of lokalise_branch.txt
       - name: Debug - lokalise_branch.txt
-        if: success()  # Only run this if the previous step did not fail
+        if: ${{ env.IS_DEFAULT_BRANCH == 'true' }}  # Only run if IS_DEFAULT_BRANCH is true
         run: |
           echo "Contents of lokalise_branch.txt:"
           cat lokalise_branch.txt
@@ -67,6 +69,7 @@ jobs:
 
       # List Lokalise Branches and save localization branch name
       - name: List Lokalise Branches and save localization branch name
+        if: ${{ env.IS_DEFAULT_BRANCH == 'false' }}  # Only run if IS_DEFAULT_BRANCH is false
         id: lokalise_branches
         run: |
           LOKALISE_BRANCHES=$(./bin/lokalise2 --token="${{ env.VAR_LOKALISE_API_TOKEN }}" \
@@ -78,6 +81,7 @@ jobs:
 
       # Debug read contents of lokalise_branches.txt
       - name: Debug - lokalise_branches.txt
+        if: ${{ env.IS_DEFAULT_BRANCH == 'false' }}  # Only run if IS_DEFAULT_BRANCH is false
         run: |
           echo "Contents of lokalise_branches.txt:"
           cat lokalise_branches.txt
@@ -100,9 +104,40 @@ jobs:
 
       # Debug read contents of lokalise_branch.txt
       - name: Debug - lokalise_branch.txt
-        if: success()  # Only run this if the previous step did not fail
+        if: ${{ env.IS_DEFAULT_BRANCH == 'false' }}  # Only run if IS_DEFAULT_BRANCH is false
         run: |
           echo "Contents of lokalise_branch.txt:"
           cat lokalise_branch.txt
 
-    
+      # Create l10n_Branch or Check Out Existing Branch
+      - name: Create or Checkout l10n_Branch
+        run: |
+          SHORT_SHA=${GITHUB_SHA::6}
+          GIT_BRANCH_NAME=$(cat branch.txt)
+          NEW_BRANCH_NAME="${{ env.VAR_GIT_LOCALIZATION_BRANCH_MARKER }}_${GIT_BRANCH_NAME}_${SHORT_SHA}"
+
+          # Check if the branch already exists
+          if git show-ref --quiet refs/heads/"$NEW_BRANCH_NAME"; then
+            echo "Branch $NEW_BRANCH_NAME already exists. Checking out the branch."
+            git checkout "$NEW_BRANCH_NAME"
+          else
+            echo "Branch $NEW_BRANCH_NAME does not exist. Creating and checking out the branch."
+            git checkout -b "$NEW_BRANCH_NAME"
+          fi
+
+       # Pull localization files from Lokalise
+      - name: Pull localization files from Lokalise
+        run: |
+         LOKALISE_BRANCH = lokalise_branch.txt
+         ./bin/lokalise2 --token="${{ env.VAR_LOKALISE_API_TOKEN }}" \
+                         --project-id="${{ env.VAR_LOKALISE_PROJECT_ID }}:$LOKALISE_BRANCH" \
+                         file download \
+                         --format json \
+                         --original-filenames=true \
+                         --directory-prefix="/" \
+                         --export-sort a_z \
+                         --filter-data translated \
+                         --include-tags=${{ github.ref_name }}
+
+
+          
