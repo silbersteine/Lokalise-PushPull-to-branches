@@ -38,7 +38,7 @@ jobs:
         run: |
           GIT_BRANCH_NAME=$(cat branch.txt)
           if [ "$GIT_BRANCH_NAME" = "${{ env.VAR_GIT_DEFAULT_BRANCH }}" ]; then
-            echo The Git default branch triggered this workflow."
+            echo "The Git default branch triggered this workflow."
             echo "IS_DEFAULT_BRANCH=true" >> $GITHUB_ENV
           else
             echo "A Git feature branch triggered this workflow."
