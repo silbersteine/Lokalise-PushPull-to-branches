@@ -138,7 +138,7 @@ jobs:
         run: | 
           # Fetch the branch name from lokalise_branch.txt
           LOKALISE_BRANCH=$(cat lokalise_branch.txt)
-          echo "Seind files to Lokalise branch: $LOKALISE_BRANCH"
+          echo "Send files to Lokalise branch: $LOKALISE_BRANCH"
           
           # Read changed files from changed_files.txt
           if [ -f changed_files.txt ]; then
