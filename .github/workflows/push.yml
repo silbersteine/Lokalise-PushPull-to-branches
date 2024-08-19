@@ -199,6 +199,7 @@ jobs:
               file upload \
               --file="$file" \
               --lang-iso="${{ env.VAR_LOKALISE_SOURCE_LANG_ISO }}" \
+              --use-automations=true \
               --replace-modified \
               --include-path \
               --distinguish-by-file \
