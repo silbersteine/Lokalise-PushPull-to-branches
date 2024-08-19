@@ -1,0 +1,92 @@
+name: Download Localization Files
+on:
+  workflow_dispatch:
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      GITHUB_PREVIOUS_COMMIT: ${{ github.event.after }}
+      GITHUB_CURRENT_COMMIT: ${{ github.event.before }}
+      VAR_LOKALISE_API_TOKEN: ${{ secrets.LOKALISE_API_TOKEN }}
+      VAR_LOKALISE_PROJECT_ID: ${{ vars.LOKALISE_PROJECT_ID }}
+      VAR_LOKALISE_SOURCE_LANG_ISO: ${{ vars.LOKALISE_SOURCE_LANG }}
+      VAR_LOKALISE_FOLDER_PATH: ${{ vars.LOKALISE_TRANSLATIONS_PATH }}
+      VAR_GIT_DEFAULT_BRANCH: ${{ vars.GIT_DEFAULT_BRANCH }}
+      VAR_GIT_UPSTREAM_BRANCH: ${{ vars.GIT_UPSTREAM_BRANCH }}
+
+    steps:
+      # Checkout the repository to the GitHub runner
+      - name: Checkout Repo
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0  # Fetch the full history of the repository to ensure all commits are available
+
+
+      # Download and install the Lokalise CLI tool
+      - name: Install Lokalise CLI
+        run: curl -sfL https://raw.githubusercontent.com/lokalise/lokalise-cli-2-go/master/install.sh | sh
+
+      # Store Git Branch Name 
+      - name: Get Git Branch Name 
+        run: |
+          GIT_BRANCH_NAME="${{ github.ref_name }}"
+          echo "$GIT_BRANCH_NAME" > branch.txt
+          echo "The Git branch triggering this download is $GIT_BRANCH_NAME"
+      
+      # Check if Triggering Branch is Default Branch
+      - name: Check if Triggering Branch is Git Default Branch
+        run: |
+          GIT_BRANCH_NAME=$(cat branch.txt)
+          if [ "$GIT_BRANCH_NAME" = "${{ env.VAR_GIT_DEFAULT_BRANCH }}" ]; then
+            echo The Git default branch triggered this workflow."
+            echo "IS_DEFAULT_BRANCH=true" >> $GITHUB_ENV
+          else
+            echo "A Git feature branch triggered this workflow."
+            echo "IS_DEFAULT_BRANCH=false" >> $GITHUB_ENV
+          fi
+
+      # Debug read IS_DEFAULT_BRANCH value
+      - name: Debug - IS_DEFAULT_BRANCH
+        run: |
+          echo "IS_DEFAULT_BRANCH=$IS_DEFAULT_BRANCH"
+
+      # List Lokalise Branches and save localization branch name
+      - name: List Lokalise Branches and save localization branch name
+        id: lokalise_branches
+        run: |
+          LOKALISE_BRANCHES=$(./bin/lokalise2 --token="${{ env.VAR_LOKALISE_API_TOKEN }}" \
+          --project-id="${{ env.VAR_LOKALISE_PROJECT_ID }}" \
+          branch list | jq -r '.branches[].name')
+          
+          echo -e "Lokalise branches:\n$LOKALISE_BRANCHES"
+          echo "$LOKALISE_BRANCHES" > lokalise_branches.txt
+
+      # Debug read contents of lokalise_branches.txt
+      - name: Debug - lokalise_branches.txt
+        run: |
+          echo "Contents of lokalise_branches.txt:"
+          cat lokalise_branches.txt
+
+      # Compare Lokalise Branch names to Git Triggering Branch and Cancel Workflow if Branch Does Not Exist
+      - name: Compare Lokalise Branch names to Git Triggering Branch
+        run: |
+          GIT_BRANCH_NAME=$(cat branch.txt)
+          LOKALISE_BRANCHES=$(cat lokalise_branches.txt)
+
+          if echo "$LOKALISE_BRANCHES" | grep -q "^$GIT_BRANCH_NAME$"; then
+            echo "Branch $GIT_BRANCH_NAME exists in Lokalise."
+            echo "LOKALISE_BRANCH=$GIT_BRANCH_NAME" > lokalise_branch.txt
+          else
+            echo "Branch $GIT_BRANCH_NAME does not exist in Lokalise."
+            echo "Cancelling the workflow."
+            exit 1  # This will stop the workflow with an error
+          fi
+
+      # Debug read contents of lokalise_branch.txt
+      - name: Debug - lokalise_branch.txt
+        if: success()  # Only run this if the previous step did not fail
+        run: |
+          echo "Contents of lokalise_branch.txt:"
+          cat lokalise_branch.txt
+
+    
