@@ -40,8 +40,6 @@ jobs:
           else
             echo "A Git feature branch triggered this workflow."
             echo "IS_DEFAULT_BRANCH=false" >> $GITHUB_ENV
-            LOKALISE_BRANCH="$GIT_BRANCH"
-            echo "$LOKALISE_BRANCH" > lokalise_branch.txt
           fi
 
       # Download and install the Lokalise CLI tool
@@ -113,11 +111,6 @@ jobs:
             echo "lokalise_branch.txt not found."
           fi
 
-      # Debug env.VAR push_to_Lokalise_master
-      - name: Debug env.VAR push_to_Lokalise_master
-        run: |
-          echo "Value of push_to_Lokalise_master: ${{ env.push_to_Lokalise_master }}"
-
       # Create a new branch in Lokalise if it doesn't exist
       - name: Create Lokalise Branch
         if: ${{ env.IS_DEFAULT_BRANCH == 'false' }}  # Only run if IS_DEFAULT_BRANCH is false  
@@ -183,27 +176,22 @@ jobs:
           done
 
 
-      # Push changed files to Lokalise Master
-      - name: Push files to Lokalise Master
+      # Push all localization files to Lokalise Master
+      - name: Push all localization files to Lokalise Master
         if: ${{ env.IS_DEFAULT_BRANCH == 'true' }}  # Only run if IS_DEFAULT_BRANCH is true  
         run: |
           # Fetch the branch name from lokalise_branch.txt
           LOKALISE_BRANCH=$(cat lokalise_branch.txt)
-          echo "Fetched branch name: $LOKALISE_BRANCH"
+          echo "Fetched Lokalise branch name: $LOKALISE_BRANCH"
           
-          # Read changed files from changed_files.txt
-          if [ -f changed_files.txt ]; then
-            changed_files=$(cat changed_files.txt | grep -E '^pub/locales/en/.*\.json$')
-          else
-            echo "No changed_files.txt file found. Exiting."
-            exit 1
-          fi
-            
-          echo "Changed files to push to Lokalise:"
-          echo "$changed_files"
+          # Find all relevant localization files
+          localization_files=$(find ${{ env.VAR_LOKALISE_FOLDER_PATH }}/${{ env.VAR_LOKALISE_SOURCE_LANG_ISO }}/ -name "*.json")
+          
+          echo "Localization files to push to Lokalise:"
+          echo "$localization_files"
         
-          # Loop through each changed file and upload it to Lokalise
-          for file in $changed_files; do
+          # Loop through each localization file and upload it to Lokalise
+          for file in $localization_files; do
             if [ -f "$file" ]; then
               echo "Uploading $file to Lokalise..."
               ./bin/lokalise2 --token="${{ env.VAR_LOKALISE_API_TOKEN }}" \
@@ -224,3 +212,4 @@ jobs:
               echo "File $file does not exist."
             fi
           done
+X
