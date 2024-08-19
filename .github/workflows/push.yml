@@ -59,7 +59,6 @@ jobs:
             git fetch origin ${{ github.ref_name }}:${{ github.ref_name }}-current
             echo "Changed localization files between ${{ vars.GIT_UPSTREAM_BRANCH }} and ${{ github.ref_name }}:"
             git diff --name-only ${{ github.ref_name }}-upstream...${{ github.ref_name }}-current -- '${{ vars.LOKALISE_TRANSLATIONS_PATH }}/${{ vars.LOKALISE_SOURCE_LANG }}/**' | tee -a changed_files.txt
-          fi
           
       # Debug read contents of changed_files.txt
       - name: Debug - changed_files.txt
