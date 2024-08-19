@@ -136,7 +136,7 @@ jobs:
                          --original-filenames=true \
                          --directory-prefix="/" \
                          --export-sort a_z \
-                         --filter-data translated \
+                         --export-empty-as base \
                          --include-tags=${{ github.ref_name }}
 
       # Commit changes with debugging
