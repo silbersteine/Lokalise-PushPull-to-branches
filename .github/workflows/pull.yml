@@ -128,7 +128,7 @@ jobs:
        # Pull localization files from Lokalise
       - name: Pull localization files from Lokalise
         run: |
-         LOKALISE_BRANCH = lokalise_branch.txt
+         LOKALISE_BRANCH=$(cat lokalise_branch.txt)
          ./bin/lokalise2 --token="${{ env.VAR_LOKALISE_API_TOKEN }}" \
                          --project-id="${{ env.VAR_LOKALISE_PROJECT_ID }}:$LOKALISE_BRANCH" \
                          file download \
