@@ -15,6 +15,7 @@ jobs:
       VAR_GIT_DEFAULT_BRANCH: ${{ vars.GIT_DEFAULT_BRANCH }}
       VAR_GIT_UPSTREAM_BRANCH: ${{ vars.GIT_UPSTREAM_BRANCH }}
       VAR_GIT_LOCALIZATION_BRANCH_MARKER: ${{ vars.GIT_LOCALIZATION_BRANCH_MARKER }}
+      VAR_GIT_BRANCH_NAME: ${{ github.ref_name }}  # Externalized GIT_BRANCH_NAME variable
 
     steps:
       # Checkout the repository to the GitHub runner
@@ -23,23 +24,14 @@ jobs:
         with:
           fetch-depth: 0  # Fetch the full history of the repository to ensure all commits are available
 
-
       # Download and install the Lokalise CLI tool
       - name: Install Lokalise CLI
         run: curl -sfL https://raw.githubusercontent.com/lokalise/lokalise-cli-2-go/master/install.sh | sh
 
-      # Store Git Branch Name 
-      - name: Get Git Branch Name 
-        run: |
-          GIT_BRANCH_NAME="${{ github.ref_name }}"
-          echo "$GIT_BRANCH_NAME" > branch.txt
-          echo "The Git branch triggering this download is $GIT_BRANCH_NAME"
-      
       # Check if Triggering Branch is Default Branch
       - name: Check if Triggering Branch is Git Default Branch
         run: |
-          GIT_BRANCH_NAME=$(cat branch.txt)
-          if [ "$GIT_BRANCH_NAME" = "${{ env.VAR_GIT_DEFAULT_BRANCH }}" ]; then
+          if [ "${{ env.VAR_GIT_BRANCH_NAME }}" = "${{ env.VAR_GIT_DEFAULT_BRANCH }}" ]; then
             echo "The Git default branch triggered this workflow."
             echo "IS_DEFAULT_BRANCH=true" >> $GITHUB_ENV
           else
@@ -57,7 +49,7 @@ jobs:
       - name: Assign Lokalise Branch of master for workflow use
         if: ${{ env.IS_DEFAULT_BRANCH == 'true' }}  # Only run if IS_DEFAULT_BRANCH is true
         run: |
-            echo "Branch $GIT_BRANCH_NAME is the default branch."
+            echo "Branch ${{ env.VAR_GIT_BRANCH_NAME }} is the default branch."
             echo "master" > lokalise_branch.txt
       
       # Debug read contents of lokalise_branch.txt
@@ -66,7 +58,6 @@ jobs:
         run: |
           echo "Contents of lokalise_branch.txt:"
           cat lokalise_branch.txt
-
 
       # List Lokalise Branches and save localization branch name
       - name: List Lokalise Branches and save localization branch name
@@ -91,14 +82,13 @@ jobs:
       - name: Compare Lokalise Branch names to Git Triggering Branch
         if: ${{ env.IS_DEFAULT_BRANCH == 'false' }}  # Only run if IS_DEFAULT_BRANCH is false
         run: |
-          GIT_BRANCH_NAME=$(cat branch.txt)
           LOKALISE_BRANCHES=$(cat lokalise_branches.txt)
 
-          if echo "$LOKALISE_BRANCHES" | grep -q "^$GIT_BRANCH_NAME$"; then
-            echo "Branch $GIT_BRANCH_NAME exists in Lokalise."
-            echo "$GIT_BRANCH_NAME" > lokalise_branch.txt
+          if echo "$LOKALISE_BRANCHES" | grep -q "^${{ env.VAR_GIT_BRANCH_NAME }}$"; then
+            echo "Branch ${{ env.VAR_GIT_BRANCH_NAME }} exists in Lokalise."
+            echo "${{ env.VAR_GIT_BRANCH_NAME }}" > lokalise_branch.txt
           else
-            echo "Branch $GIT_BRANCH_NAME does not exist in Lokalise."
+            echo "Branch ${{ env.VAR_GIT_BRANCH_NAME }} does not exist in Lokalise."
             echo "Cancelling the workflow."
             exit 1  # This will stop the workflow with an error
           fi
@@ -114,8 +104,7 @@ jobs:
       - name: Create or Checkout l10n_Branch
         run: |
           SHORT_SHA=${GITHUB_SHA::6}
-          GIT_BRANCH_NAME=$(cat branch.txt)
-          GIT_LOCALIZATION_BRANCH_NAME="${{ env.VAR_GIT_LOCALIZATION_BRANCH_MARKER }}_${GIT_BRANCH_NAME}_${SHORT_SHA}"
+          GIT_LOCALIZATION_BRANCH_NAME="${{ env.VAR_GIT_LOCALIZATION_BRANCH_MARKER }}_${{ env.VAR_GIT_BRANCH_NAME }}_${SHORT_SHA}"
           echo "$GIT_LOCALIZATION_BRANCH_NAME" > git_localization_branch.txt
 
           # Check if the branch already exists
@@ -145,7 +134,7 @@ jobs:
                          --directory-prefix="/" \
                          --export-sort a_z \
                          --export-empty-as base \
-                         --include-tags=${{ github.ref_name }}
+                         --include-tags=${{ env.VAR_GIT_BRANCH_NAME }}
 
       # Commit changes with debugging
       - name: Commit to localization branch
@@ -184,7 +173,6 @@ jobs:
       # Open pull request on triggering Git branch
       - name: Create Pull Request
         run: |
-            GIT_BRANCH_NAME=$(cat branch.txt)
             GIT_LOCALIZATION_BRANCH_NAME=$(cat git_localization_branch.txt)
             echo "Git status before creating PR:"
             git status
@@ -200,11 +188,9 @@ jobs:
 
             # Create the pull request
             echo "Creating Pull Request..."
-            gh pr create --base "$GIT_BRANCH_NAME" \
+            gh pr create --base "${{ env.VAR_GIT_BRANCH_NAME }}" \
                         --head "$GIT_LOCALIZATION_BRANCH_NAME" \
                         --title "Lokalise translations update" \
                         --body ""
 
             echo "Pull Request created successfully."
-
-          
