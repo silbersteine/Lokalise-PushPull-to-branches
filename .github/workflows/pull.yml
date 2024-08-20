@@ -151,10 +151,9 @@ jobs:
           git config --global user.name "${GITHUB_ACTOR}"
           git config --global user.email "${GITHUB_ACTOR}@users.noreply.github.com"
 
-          echo "Adding files to staging area:"
-          git add ./${{ vars.LOKALISE_TRANSLATION_PATH }}/**/*.json
-          git reset ./${{ vars.LOKALISE_TRANSLATION_PATH }}/${{ env.VAR_LOKALISE_SOURCE_LANG_ISO }}/*.json
-
+          echo "Adding target language files to staging area:"
+          find ./${{ vars.LOKALISE_TRANSLATION_PATH }}/ -type f -name '*.json' ! -path "*${{ env.VAR_LOKALISE_SOURCE_LANG_ISO }}*" -exec git add {} +
+      
           echo "Git status after adding files:"
           git status
 
