@@ -81,13 +81,23 @@ jobs:
             echo "Branch "${{ env.VAR_GIT_BRANCH_NAME }}" exists in Lokalise. Continuing on Lokalise branch."
             LOKALISE_BRANCH="${{ env.VAR_GIT_BRANCH_NAME }}"
             echo "$LOKALISE_BRANCH" > lokalise_branch.txt
+            echo "CREATE_LOKALISE_BRANCH=false" >> $GITHUB_ENV
           else
             echo "Branch "${{ env.VAR_GIT_BRANCH_NAME }}" does not exist in Lokalise. Will create a branch in Lokalise."
             LOKALISE_BRANCH="${{ env.VAR_GIT_BRANCH_NAME }}"
             echo "$LOKALISE_BRANCH" > lokalise_branch.txt
+            echo "CREATE_LOKALISE_BRANCH=true" >> $GITHUB_ENV
           fi
 
-      # Debug LOKALISE_BRANCH 
+      # Debug CREATE_LOKALISE_BRANCH
+      - name: Debug CREATE_LOKALISE_BRANCH
+        if: ${{ env.IS_DEFAULT_BRANCH == 'false' }}  # Only run if IS_DEFAULT_BRANCH is false 
+        run: |
+          echo "Value of CREATE_LOKALISE_BRANCH:"
+          echo "${{ env.CREATE_LOKALISE_BRANCH }}
+      
+          # Debug LOKALISE_BRANCH 
+
       - name: Debug LOKALISE_BRANCH
         if: ${{ env.IS_DEFAULT_BRANCH == 'false' }}  # Only run if IS_DEFAULT_BRANCH is false 
         run: |
@@ -101,7 +111,7 @@ jobs:
 
       # Create a new branch in Lokalise if it doesn't exist
       - name: Create Lokalise Branch
-        if: ${{ env.IS_DEFAULT_BRANCH == 'false' }}  # Only run if IS_DEFAULT_BRANCH is false  
+        if: ${{ env.IS_DEFAULT_BRANCH == 'false' && env.CREATE_LOKALISE_BRANCH == 'true' }}  # Only run if IS_DEFAULT_BRANCH is false AND if Lokalise Branch does not exist
         run: |
           # Fetch the branch name from lokalise_branch.txt
           LOKALISE_BRANCH=$(cat lokalise_branch.txt)
@@ -123,7 +133,7 @@ jobs:
 
       # Push changed files to Lokalise Branch
       - name: Push files to Lokalise Branch
-        if: ${{ env.IS_DEFAULT_BRANCH == 'false' }}  # Only run if IS_DEFAULT_BRANCH is false  
+        if: ${{ env.IS_DEFAULT_BRANCH == 'false' }} # Only run if IS_DEFAULT_BRANCH is false AND if Lokalise Branch does not exist 
         run: | 
           # Fetch the branch name from lokalise_branch.txt
           LOKALISE_BRANCH=$(cat lokalise_branch.txt)
