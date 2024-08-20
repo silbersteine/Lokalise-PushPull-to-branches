@@ -13,7 +13,7 @@ jobs:
       VAR_LOKALISE_FOLDER_PATH: ${{ vars.LOKALISE_TRANSLATIONS_PATH }}
       VAR_GIT_DEFAULT_BRANCH: ${{ vars.GIT_DEFAULT_BRANCH }}
       VAR_GIT_UPSTREAM_BRANCH: ${{ vars.GIT_UPSTREAM_BRANCH }}
-      VAR_GIT_BRANCH_NAME: ${{ env.GIT_BRANCH_NAME }}  # Externalized Git branch name
+      VAR_GIT_BRANCH_NAME: ${{ github.ref_name }}  # Externalized GIT_BRANCH_NAME variable
 
     steps:
       # Checkout the repository to the GitHub runner
