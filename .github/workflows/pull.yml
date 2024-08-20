@@ -153,7 +153,7 @@ jobs:
 
           echo "Adding files to staging area:"
           git add ./${{ vars.LOKALISE_TRANSLATION_PATH }}/**/*.json
-          git reset ./${{ vars.LOKALISE_TRANSLATION_PATH }}/${{ env.VAR_LOKALISE_SOURCE_LANG_ISO }}/
+          git reset ./${{ vars.LOKALISE_TRANSLATION_PATH }}/${{ env.VAR_LOKALISE_SOURCE_LANG_ISO }}/*.json
 
           echo "Git status after adding files:"
           git status
