@@ -94,7 +94,7 @@ jobs:
         if: ${{ env.IS_DEFAULT_BRANCH == 'false' }}  # Only run if IS_DEFAULT_BRANCH is false 
         run: |
           echo "Value of CREATE_LOKALISE_BRANCH:"
-          echo "${{ env.CREATE_LOKALISE_BRANCH }}""
+          echo "${{ env.CREATE_LOKALISE_BRANCH }}"
       
           # Debug LOKALISE_BRANCH 
 
